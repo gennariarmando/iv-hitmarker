@@ -40,6 +40,12 @@ public:
             CTxdStore::RemoveTxdSlot(slot);
         };
 
+        plugin::Events::initGameEvent += []() {
+            targetHeadShot = false;
+            targetDisplayTime = 0;
+            targetPed = nullptr;
+        };
+
         plugin::Events::drawHudEvent += []() {
             if (CCutsceneMgr::IsRunning())
                 return;
@@ -50,12 +56,9 @@ public:
                     return;
 
                 bool isDotShowing = (CHud::Components[aHudComponentInfo[HUD_WEAPON_DOT].m_nIndex]->IsDisplaying()) || (CHud::Components[aHudComponentInfo[HUD_WEAPON_SCOPE].m_nIndex]->IsDisplaying());
-                if (!isDotShowing)
-                    return;
-
                 CTaskSimpleAimGun* taskSimpleAimGun = playa->m_pPedIntelligence->m_TaskMgr.FindActiveTaskByType<CTaskSimpleAimGun>(6);
 
-                if (taskSimpleAimGun) {
+                if (isDotShowing) {
                     if (targetPed && CPed::IsPedDead(targetPed)) {
                         targetHeadShot = targetPed->m_bKilledByHeadshot;
                         targetDisplayTime = CTimer::GetTimeInMilliseconds() + 500;
@@ -66,12 +69,13 @@ public:
                         rage::Color32 col = CHudColours::Get(HUD_COLOUR_WHITE, 255);
 
                         if (targetHeadShot)
-                            col = CHudColours::Get(HUD_COLOUR_REDDARK, 255);
+                            col = CHudColours::Get(HUD_COLOUR_RED, 255);
 
-                        float x = (SCREEN_WIDTH / 2);
-                        float y = (SCREEN_HEIGHT / 2);
-                        float w = ScaleX(5.0f);
-                        float h = ScaleY(5.0f);
+                        rage::Vector2 pos = CHud::Components[aHudComponentInfo[HUD_WEAPON_DOT].m_nIndex]->pos;
+                        float x = pos.x * SCREEN_WIDTH;
+                        float y = pos.y * SCREEN_HEIGHT;
+                        float w = ScaleX(6.0f);
+                        float h = ScaleY(6.0f);
                         if (hitmarkerSprite.m_pTexture) {
                             hitmarkerSprite.Push();
                             CSprite2d::Draw(rage::Vector4(x - w, y - h, x + w, y + h), col);
@@ -79,7 +83,13 @@ public:
                         }
                     }
                     else {
-                        CPed* ped = dynamic_cast<CPed*>(taskSimpleAimGun->GetAt(0, 0));
+                        CPed* ped = nullptr;
+
+                        if (taskSimpleAimGun)
+                            ped = dynamic_cast<CPed*>(taskSimpleAimGun->GetAt(0, 0));
+                        else
+                            ped = dynamic_cast<CPed*>(playa->m_WeaponData.m_pTargetEntity);
+
                         if (ped && targetPed != ped && !CPed::IsPedDead(ped))
                             targetPed = ped;
                     }
