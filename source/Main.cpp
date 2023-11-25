@@ -56,7 +56,7 @@ public:
                     return;
 
                 bool isDotShowing = (CHud::Components[aHudComponentInfo[HUD_WEAPON_DOT].m_nIndex]->IsDisplaying()) || (CHud::Components[aHudComponentInfo[HUD_WEAPON_SCOPE].m_nIndex]->IsDisplaying());
-                CTaskSimpleAimGun* taskSimpleAimGun = playa->m_pPedIntelligence->m_TaskMgr.FindActiveTaskByType<CTaskSimpleAimGun>(6);
+                CTaskSimpleAimGun* taskSimpleAimGun = playa->m_pPedIntelligence->m_TaskMgr.FindActiveTaskByType<CTaskSimpleAimGun>(TASK_AIM_GUN);
 
                 if (isDotShowing) {
                     if (targetPed && CPed::IsPedDead(targetPed)) {
@@ -76,17 +76,17 @@ public:
                         float y = pos.y * SCREEN_HEIGHT;
                         float w = ScaleX(6.0f);
                         float h = ScaleY(6.0f);
-                        if (hitmarkerSprite.m_pTexture) {
-                            hitmarkerSprite.Push();
-                            CSprite2d::Draw(rage::Vector4(x - w, y - h, x + w, y + h), col);
-                            CSprite2d::Pop();
+                        if (hitmarkerSprite.m_pTexture.ptr) {
+                            hitmarkerSprite.SetRenderState();
+                            CSprite2d::Draw(rage::fwRect(x - w, y - h, x + w, y + h), col);
+                            CSprite2d::ClearRenderState();
                         }
                     }
                     else {
                         CPed* ped = nullptr;
 
                         if (taskSimpleAimGun)
-                            ped = dynamic_cast<CPed*>(taskSimpleAimGun->GetAt(0, 0));
+                            ped = dynamic_cast<CPed*>(taskSimpleAimGun->GetAt(0, 1));
                         else
                             ped = dynamic_cast<CPed*>(playa->m_WeaponData.m_pTargetEntity);
 
@@ -100,7 +100,7 @@ public:
                     targetPed = nullptr;
                 }
                 });
-            base->Append();
+            base->Init();
         };
     }
 } hitMarkerIV;
